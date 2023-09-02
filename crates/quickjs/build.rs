@@ -1,4 +1,5 @@
 use std::env;
+use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
@@ -12,10 +13,12 @@ fn main() {
         .args(&["./quickjs/libquickjs.a", &output])
         .output()
         .unwrap();
-    Command::new("bindgen")
-        .current_dir("./quickjs/")
-        .args(&["./quickjs.h", "-o", &format!("{}/quickjs.rs", output)])
-        .output()
+    bindgen::Builder::default()
+        .header("quickjs/quickjs.h")
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .generate()
+        .unwrap()
+        .write_to_file(PathBuf::from(&output).join("quickjs.rs"))
         .unwrap();
 
     println!("cargo:rustc-link-search={output}");
